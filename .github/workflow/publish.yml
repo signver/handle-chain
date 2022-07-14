@@ -1,7 +1,5 @@
 on:
   workflow_dispatch:
-env:
-  aws_region: ap-southeast-1
 jobs:
   Build-And-Deploy:
     runs-on: ubuntu-latest
