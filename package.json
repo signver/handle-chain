@@ -1,5 +1,5 @@
 {
-  "name": "handle-chain",
+  "name": "@signver/handle-chain",
   "version": "1.0.0",
   "description": "Simply utility to create a handler chain.",
   "main": "dist/index.js",
