@@ -1,9 +1,9 @@
-export type NextHandlerAction = () => Promise<void> | void;
+export type NextHandlerAction = () => void;
 
 export type Handler<MutableContext> = (
   context: MutableContext,
   next: NextHandlerAction
-) => Promise<void>;
+) => Promise<void> | void;
 
 export type ChainOfHandler<MutableContext> = {
   readonly attach: (...handler: Handler<MutableContext>[]) => void;
