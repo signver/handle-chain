@@ -1,0 +1,18 @@
+on:
+  workflow_dispatch:
+env:
+  aws_region: ap-southeast-1
+jobs:
+  Build-And-Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2.5.1
+        with:
+          node-version: 16
+          registry-url: https://npm.pkg.github.com
+      - name: Build then publish
+        run: |
+          npm ci
+          npm run build
+          npm publish
