@@ -7,20 +7,23 @@ const factory = <
   return {
     /** @description adds the handler to the stack */
     attach(...handlers) {
-      participants = [...participants, ...handlers]
+      participants = [...participants, ...handlers];
+    },
+    clear() {
+      participants = [];
     },
     /** @description removes the last matching handler from the stack */
     detach(handler) {
       const index = participants.indexOf(handler);
       index >= 0 && participants.splice(index, 1);
     },
-    dispatch(context) {
+    async dispatch(context) {
       const [...chain] = participants;
-      const next = () => {
+      const next = async () => {
         const executor = chain.pop();
-        executor?.(context, next);
+        await executor?.(context, next);
       };
-      next();
+      await next();
     },
   };
 };

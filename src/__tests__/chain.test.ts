@@ -3,18 +3,17 @@ import { Handler } from "../types";
 
 type LocalContext = { doSomething: () => void; doSomethingElse: () => void };
 
+jest.useFakeTimers()
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
 it("should handle", () => {
   const { attach, dispatch } = createChain<LocalContext>();
-  attach(
-    ({ doSomething }, next) => {
-      doSomething();
-      next();
-    }
-  );
+  attach(async ({ doSomething }, next) => {
+    doSomething();
+    next();
+  });
   const myContext = {
     doSomething: jest.fn(),
     doSomethingElse: jest.fn(),
@@ -26,11 +25,11 @@ it("should handle", () => {
 it("should propagate to multiple handlers", () => {
   const { attach, dispatch } = createChain<LocalContext>();
   attach(
-    ({ doSomething }, next) => {
+    async ({ doSomething }, next) => {
       doSomething();
       next();
     },
-    ({ doSomethingElse }, next) => {
+    async ({ doSomethingElse }, next) => {
       doSomethingElse();
       next();
     }
@@ -44,24 +43,67 @@ it("should propagate to multiple handlers", () => {
   expect(myContext.doSomethingElse).toBeCalledTimes(1);
 });
 
-it("should be handled LIFO", () => {
+it("should propagate to multiple handlers", () => {
   const { attach, dispatch } = createChain<LocalContext>();
   attach(
-    ({ doSomething }, next) => {
+    async ({ doSomething }, next) => {
       doSomething();
       next();
     },
-    ({ doSomethingElse }, next) => {
+    async ({ doSomethingElse }, next) => {
+      doSomethingElse();
+      next();
+    }
+  );
+  const myContext = {
+    doSomething: jest.fn(),
+    doSomethingElse: jest.fn(),
+  };
+  dispatch(myContext);
+  expect(myContext.doSomething).toBeCalledTimes(1);
+  expect(myContext.doSomethingElse).toBeCalledTimes(1);
+});
+
+it("should not handle if cleared", () => {
+  const { attach, clear, dispatch } = createChain<LocalContext>();
+  attach(
+    async ({ doSomething }, next) => {
+      doSomething();
+      next();
+    },
+    async ({ doSomethingElse }, next) => {
+      doSomethingElse();
+      next();
+    }
+  );
+  clear()
+  const myContext = {
+    doSomething: jest.fn(),
+    doSomethingElse: jest.fn(),
+  };
+  dispatch(myContext);
+  expect(myContext.doSomething).toBeCalledTimes(0);
+  expect(myContext.doSomethingElse).toBeCalledTimes(0);
+});
+
+it("should be handled LIFO", () => {
+  const { attach, dispatch } = createChain<LocalContext>();
+  attach(
+    async ({ doSomething }, next) => {
+      doSomething();
+      next();
+    },
+    async ({ doSomethingElse }, next) => {
       doSomethingElse();
       next();
     }
   );
   const callOrder: string[] = [];
   const myContext = {
-    doSomething: jest.fn(() => {
+    doSomething: jest.fn(async () => {
       callOrder.push("doSomething");
     }),
-    doSomethingElse: jest.fn(() => {
+    doSomethingElse: jest.fn(async () => {
       callOrder.push("doSomethingElse");
     }),
   };
@@ -74,23 +116,23 @@ it("should be handled LIFO", () => {
 it("should stop if next is not called", () => {
   const { attach, dispatch } = createChain<LocalContext>();
   attach(
-    ({ doSomething }, next) => {
+    async ({ doSomething }, next) => {
       doSomething();
       next();
     },
-    ({ doSomething, doSomethingElse }, next) => {
+    async ({ doSomething, doSomethingElse }, next) => {
       doSomething();
       doSomethingElse();
       next();
     },
-    ({ doSomething, doSomethingElse }, next) => {
+    async ({ doSomething, doSomethingElse }, next) => {
       doSomething();
       doSomethingElse();
     },
-    ({ doSomething }, next) => {
+    async ({ doSomething }, next) => {
       doSomething();
       next();
-    },
+    }
   );
   const myContext = {
     doSomething: jest.fn(),
@@ -103,16 +145,16 @@ it("should stop if next is not called", () => {
 
 it("should remove handler", () => {
   const { attach, detach, dispatch } = createChain<LocalContext>();
-  const handler1: Handler<LocalContext> = ({ doSomething }, next) => {
+  const handler1: Handler<LocalContext> = async ({ doSomething }, next) => {
     doSomething();
     next();
   };
-  const handler2: Handler<LocalContext> = ({ doSomethingElse }, next) => {
+  const handler2: Handler<LocalContext> = async ({ doSomethingElse }, next) => {
     doSomethingElse();
     next();
   };
   attach(handler1, handler2);
-  detach(handler2)
+  detach(handler2);
   const myContext = {
     doSomething: jest.fn(),
     doSomethingElse: jest.fn(),
