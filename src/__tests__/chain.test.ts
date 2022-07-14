@@ -43,27 +43,6 @@ it("should propagate to multiple handlers", () => {
   expect(myContext.doSomethingElse).toBeCalledTimes(1);
 });
 
-it("should propagate to multiple handlers", () => {
-  const { attach, dispatch } = createChain<LocalContext>();
-  attach(
-    async ({ doSomething }, next) => {
-      doSomething();
-      next();
-    },
-    async ({ doSomethingElse }, next) => {
-      doSomethingElse();
-      next();
-    }
-  );
-  const myContext = {
-    doSomething: jest.fn(),
-    doSomethingElse: jest.fn(),
-  };
-  dispatch(myContext);
-  expect(myContext.doSomething).toBeCalledTimes(1);
-  expect(myContext.doSomethingElse).toBeCalledTimes(1);
-});
-
 it("should not handle if cleared", () => {
   const { attach, clear, dispatch } = createChain<LocalContext>();
   attach(

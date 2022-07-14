@@ -17,13 +17,12 @@ const factory = <
       const index = participants.indexOf(handler);
       index >= 0 && participants.splice(index, 1);
     },
-    async dispatch(context) {
+    dispatch(context) {
       const [...chain] = participants;
-      const next = async () => {
-        const executor = chain.pop();
-        await executor?.(context, next);
+      const next = () => {
+        chain.pop()?.(context, next);
       };
-      await next();
+      next();
     },
   };
 };
