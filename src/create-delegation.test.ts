@@ -1,5 +1,5 @@
-import { createDelegation, } from './create-delegation'
-import { Delegate, } from './types'
+import { createDelegation } from './create-delegation'
+import type { Delegate } from './types'
 
 type TestDelegate = Delegate<{ info: string }, { result?: number }, { staticTestValue: string }>
 
@@ -124,6 +124,35 @@ describe("created delegation", () => {
             error: testException,
         }
         expect(delegates[1]).toBeCalledTimes(0)
+        expect(response).toMatchObject(expect.objectContaining(expectedResponse))
+    })
+    it("should always terminate early when handling exceptions", async () => {
+        const testException = new Error()
+        const delegates: TestDelegate[] = ([
+            async (context) => {
+                return {
+                    shouldStop: false
+                }
+            },
+            async (context) => {
+                throw testException
+            },
+        ] as TestDelegate[]).map(delegate => jest.fn(delegate))
+        const delegation = createDelegation({
+            delegates,
+            async stateFactory() {
+                return {
+                    staticTestValue: 'staticTestValue'
+                }
+            },
+        })
+        const response = await delegation({ info: 'test_info' })
+        const expectedResponse: Partial<typeof response> = {
+            terminatedEarly: true,
+            encounteredError: true,
+            error: testException,
+        }
+        expect(delegates[1]).toBeCalled()
         expect(response).toMatchObject(expect.objectContaining(expectedResponse))
     })
 })

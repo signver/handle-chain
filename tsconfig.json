@@ -102,6 +102,6 @@
   },
   "exclude": [
     "jest.config.ts",
-    "src/**/__tests__/*"
+    "src/**/*.test.ts"
   ]
 }
