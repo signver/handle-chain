@@ -1,2 +1,2 @@
 export * from './types'
-export * from './create-delegation'
+export { createDelegation as default } from './create-delegation'
