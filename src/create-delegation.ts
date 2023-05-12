@@ -31,6 +31,7 @@ export function createDelegation<
                     break
                 }
             } catch (e) {
+                context.response.terminatedEarly = true
                 context.response.encounteredError = true
                 context.response.error = e
                 break
