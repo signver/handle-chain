@@ -12,9 +12,9 @@ export function createDelegation<
 ) {
     type ContextOfDelegates = ContextOf<typeof delegates>
     type FullDelegationResponse = ContextOfDelegates['response']
-    return async function delegate(request: DelegationRequest, defaultResponse?: FullDelegationResponse) {
+    return async function delegate(request: DelegationRequest, defaultResponse?: DelegationResponseData) {
         const state = await stateFactory()
-        const response = defaultResponse || {} as FullDelegationResponse
+        const response: FullDelegationResponse = { terminatedEarly: false, encounteredError: false, data: defaultResponse || {} as DelegationResponseData }
         const context: ContextOfDelegates = Object.seal({
             request,
             response,
