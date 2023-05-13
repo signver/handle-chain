@@ -14,20 +14,29 @@ export function createDelegation<
     type FullDelegationResponse = ContextOfDelegates['response']
     return async function delegate(request: DelegationRequest, defaultResponse?: DelegationResponseData) {
         const state = await stateFactory()
-        const response: FullDelegationResponse = { terminatedEarly: false, encounteredError: false, error: null, data: defaultResponse || null }
+        const response: FullDelegationResponse = {
+            terminatedEarly: false,
+            encounteredError: false,
+            error: null,
+            data: defaultResponse || null,
+            setData(transformer) {
+                response.data = transformer(response.data)
+            },
+        }
+        let shouldStop = false
         const context: ContextOfDelegates = Object.seal({
             request: Object.freeze(request),
             response,
             state,
-            setResponse(data) {
-                response.data = data
+            stop() {
+                shouldStop = true
             }
         })
         for (const delegate of delegates) {
             context.response.terminatedEarly = delegate !== delegates[delegates.length - 1]
             try {
-                const { shouldStop } = await delegate(context)
-                if (shouldStop) {
+                const result = await delegate(context)
+                if (shouldStop || result?.shouldStop) {
                     break
                 }
             } catch (e) {
