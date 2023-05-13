@@ -4,5 +4,5 @@ export interface DelegateContext<DelegationRequest extends {} = {}, DelegationRe
     request: DelegationRequest
     response: DelegationResponse<DelegationResponseData>
     state: DelegateState
-    setResponse(data: DelegationResponseData): void
+    stop: () => void
 }

@@ -5,7 +5,7 @@ export interface DelegateResult {
 }
 
 export interface Delegate<DelegationRequest extends {} = {}, DelegationResponseData extends {} = {}, DelegateState extends {} = {}> {
-    (context: DelegateContext<DelegationRequest, DelegationResponseData, DelegateState>): Promise<DelegateResult>
+    (context: DelegateContext<DelegationRequest, DelegationResponseData, DelegateState>): Promise<DelegateResult | void>
 }
 
 type ElementOf<T> = T extends (infer E)[] ? E : unknown

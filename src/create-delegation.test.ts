@@ -28,17 +28,9 @@ describe("created delegation", () => {
         const delegates = ([
             async (context) => {
                 Object.assign(context.state, delegateMixin)
-                return {
-                    shouldStop: false
-                }
             },
             async (context) => {
-                context.setResponse(
-                    Object.assign(context.response.data as any, responseMixin) as any
-                )
-                return {
-                    shouldStop: false
-                }
+                context.response.setData((data) => Object.assign(data as any, responseMixin) as any)
             }
         ] as TestDelegate[]).map(delegate => jest.fn(delegate))
         const delegation = createDelegation({
@@ -48,13 +40,13 @@ describe("created delegation", () => {
             },
         })
         const response = await delegation(resquest, defaultResponse)
-        const expectedResponse: typeof response = {
+        const expectedResponse: Omit<typeof response, 'setData'> = {
             terminatedEarly: false,
             encounteredError: false,
             error: null,
             data: { ...defaultResponse }
         }
-        expect(response).toMatchObject(expectedResponse)
+        expect(response).toEqual(expect.objectContaining(expectedResponse))
         delegates.map(delegate => {
             expect(delegate).toBeCalledWith(expect.objectContaining({
                 request: expect.objectContaining(resquest),
@@ -65,37 +57,69 @@ describe("created delegation", () => {
             }))
         })
     })
-    it("should end early", async () => {
-        const delegates: TestDelegate[] = ([
-            async (context) => {
-                return {
-                    shouldStop: true
+    describe("should end early", () => {
+        test("via delegate return value", async () => {
+            const delegates: TestDelegate[] = ([
+                async (context) => {
+                    return {
+                        shouldStop: true
+                    }
+                },
+                async (context) => {
+                    return {
+                        shouldStop: false
+                    }
                 }
-            },
-            async (context) => {
-                return {
-                    shouldStop: false
-                }
+            ] as TestDelegate[]).map(delegate => jest.fn(delegate))
+            const delegation = createDelegation({
+                delegates,
+                async stateFactory() {
+                    return {
+                        staticTestValue: 'staticTestValue'
+                    }
+                },
+            })
+            const response = await delegation({ info: 'test_info' })
+            const expectedResponse: Omit<typeof response, 'setData'> = {
+                terminatedEarly: true,
+                encounteredError: false,
+                error: null,
+                data: null
             }
-        ] as TestDelegate[]).map(delegate => jest.fn(delegate))
-        const delegation = createDelegation({
-            delegates,
-            async stateFactory() {
-                return {
-                    staticTestValue: 'staticTestValue'
-                }
-            },
+            expect(response).toEqual(expect.objectContaining(expectedResponse))
+            expect(delegates[0]).toBeCalled()
+            expect(delegates[1]).not.toBeCalled()
         })
-        const response = await delegation({ info: 'test_info' })
-        const expectedResponse: typeof response = {
-            terminatedEarly: true,
-            encounteredError: false,
-            error: null,
-            data: null
-        }
-        expect(response).toMatchObject(expectedResponse)
-        expect(delegates[0]).toBeCalled()
-        expect(delegates[1]).not.toBeCalled()
+        test("via context stop", async () => {
+            const delegates: TestDelegate[] = ([
+                async (context) => {
+                    context.stop()
+                },
+                async (context) => {
+                    return {
+                        shouldStop: false
+                    }
+                }
+            ] as TestDelegate[]).map(delegate => jest.fn(delegate))
+            const delegation = createDelegation({
+                delegates,
+                async stateFactory() {
+                    return {
+                        staticTestValue: 'staticTestValue'
+                    }
+                },
+            })
+            const response = await delegation({ info: 'test_info' })
+            const expectedResponse: Omit<typeof response, 'setData'> = {
+                terminatedEarly: true,
+                encounteredError: false,
+                error: null,
+                data: null
+            }
+            expect(response).toEqual(expect.objectContaining(expectedResponse))
+            expect(delegates[0]).toBeCalled()
+            expect(delegates[1]).not.toBeCalled()
+        })
     })
     it("should handle exceptions", async () => {
         const testException = new Error()

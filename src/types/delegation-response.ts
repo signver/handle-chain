@@ -3,4 +3,5 @@ export interface DelegationResponse<ResponseData> {
     encounteredError: boolean
     error: any
     data: ResponseData | null
+    setData: (transformer: (current: ResponseData | null) => ResponseData) => void
 }
