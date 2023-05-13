@@ -47,10 +47,13 @@ export async function fetchDataDelegate(context: CustomDelegateContext): Delegat
     getRawData2FromID(context.request.id),
   ]) 
   if (!data[0] || !data[1]) {
-      // stop the delegation prematurely
-    return {
-      shouldStop: true
-    }
+    // stop the delegation prematurely
+    context.stop()
+    /* Alternatively...
+      return {
+        shouldStop: true
+      }
+    */
   }
   context.state.raw = data
   return {
@@ -60,7 +63,7 @@ export async function fetchDataDelegate(context: CustomDelegateContext): Delegat
 export async function refineDataDelegate(context: CustomDelegateContext): DelegateResult {
   const data = await refineData(context.state.raw)
   // set the final output at context.response.data
-  context.setResponse(data)
+  context.response.setData((currentData) => data)
   return {
     shouldStop: false
   }
